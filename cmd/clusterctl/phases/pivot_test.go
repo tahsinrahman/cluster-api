@@ -527,6 +527,10 @@ func (t *target) Apply(string) error {
 	return nil
 }
 
+func (t *target) SetSecretOwnerRefUID(secret *corev1.Secret) error {
+	return nil
+}
+
 func (t *target) CreateClusterObject(c *clusterv1.Cluster) error {
 	t.clusters[c.Namespace] = append(t.clusters[c.Namespace], c)
 	return nil

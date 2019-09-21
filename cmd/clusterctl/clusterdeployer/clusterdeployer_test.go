@@ -364,6 +364,10 @@ func (c *testClusterClient) ScaleDeployment(ns string, name string, scale int32)
 	return nil
 }
 
+func (c *testClusterClient) SetSecretOwnerRefUID(secret *corev1.Secret) error {
+	return nil
+}
+
 func (c *testClusterClient) GetUnstructuredObject(u *unstructured.Unstructured) error {
 	if c.unstructuredObjects == nil {
 		c.unstructuredObjects = make(map[string][]*unstructured.Unstructured)

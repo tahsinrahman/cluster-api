@@ -65,6 +65,7 @@ type targetClient interface {
 	GetMachineDeployment(namespace, name string) (*clusterv1.MachineDeployment, error)
 	GetMachineSet(string, string) (*clusterv1.MachineSet, error)
 	WaitForClusterV1alpha2Ready() error
+	SetSecretOwnerRefUID(*corev1.Secret) error
 }
 
 // Pivot deploys the provided provider components to a target cluster and then migrates
@@ -253,9 +254,10 @@ func moveSecret(from sourceClient, to targetClient, secret *corev1.Secret) error
 	// New objects cannot have a specified resource version. Clear it out.
 	secret.SetResourceVersion("")
 
-	// remove the UID from ownerReferences as it will be different across clusters
-	for i := 0; i < len(secret.OwnerReferences); i++ {
-		secret.OwnerReferences[i].UID = ""
+	// Set Corrent UID to secret's ownerReferences
+	err := to.SetSecretOwnerRefUID(secret)
+	if err != nil {
+		return errors.Wrap(err, "failed to set new UID to secret ownerReferences")
 	}
 
 	if err := to.CreateSecret(secret); err != nil {

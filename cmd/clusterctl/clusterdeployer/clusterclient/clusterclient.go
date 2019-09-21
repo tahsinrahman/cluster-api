@@ -105,6 +105,7 @@ type Client interface {
 	ScaleDeployment(namespace, name string, scale int32) error
 	WaitForClusterV1alpha2Ready() error
 	WaitForResourceStatuses() error
+	SetSecretOwnerRefUID(*corev1.Secret) error
 }
 
 type client struct {
@@ -708,6 +709,21 @@ func (c *client) ForceDeleteSecret(namespace, name string) error {
 	if err := c.clientSet.Delete(context.Background(), secret); err != nil {
 		return errors.Wrapf(err, "error deleting Secret %s/%s", secret.Namespace, secret.Name)
 	}
+	return nil
+}
+
+func (c *client) SetSecretOwnerRefUID(secret *corev1.Secret) error {
+	ownerReferences := secret.OwnerReferences
+	for i := 0; i < len(ownerReferences); i++ {
+		key := ctrlclient.ObjectKey{Namespace: secret.Namespace, Name: ownerReferences[i].Name}
+		u := &unstructured.Unstructured{}
+		if err := c.clientSet.Get(context.Background(), key, u); err != nil {
+			return errors.Wrapf(err, "error fetching unstructured object %v", key)
+		}
+		ownerReferences[i].UID = u.GetUID()
+	}
+	secret.SetOwnerReferences(ownerReferences)
+
 	return nil
 }
 
