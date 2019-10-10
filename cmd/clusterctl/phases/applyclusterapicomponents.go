@@ -18,14 +18,23 @@ package phases
 
 import (
 	"github.com/pkg/errors"
+	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/klog"
 	"sigs.k8s.io/cluster-api/cmd/clusterctl/clusterdeployer/clusterclient"
 )
 
 func ApplyClusterAPIComponents(client clusterclient.Client, providerComponents string) error {
 	klog.Info("Applying Cluster API Provider Components")
-	if err := client.Apply(providerComponents); err != nil {
-		return errors.Wrap(err, "unable to apply cluster api controllers")
+
+	var clientErr error
+	waitErr := wait.PollImmediate(providerComponentsIntervalTimeout, providerComponentsRetryTimeout, func() (bool, error) {
+		if clientErr = client.Apply(providerComponents); clientErr != nil {
+			return false, nil
+		}
+		return true, nil
+	})
+	if waitErr != nil {
+		return errors.Wrap(clientErr, "timed out waiting for cluster api components to be ready")
 	}
 
 	return client.WaitForClusterV1alpha2Ready()

@@ -19,6 +19,7 @@ package phases
 import (
 	"io"
 	"strings"
+	"time"
 
 	"github.com/pkg/errors"
 	appsv1 "k8s.io/api/apps/v1"
@@ -26,9 +27,15 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/klog"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1alpha2"
+)
+
+const (
+	providerComponentsIntervalTimeout = time.Second * 10
+	providerComponentsRetryTimeout    = time.Minute * 5
 )
 
 type sourceClient interface {
@@ -74,8 +81,16 @@ type targetClient interface {
 // all cluster-api resources from the source cluster to the target cluster
 func Pivot(source sourceClient, target targetClient, providerComponents string) error {
 	klog.Info("Applying Cluster API Provider Components to Target Cluster")
-	if err := target.Apply(providerComponents); err != nil {
-		return errors.Wrap(err, "unable to apply cluster api controllers")
+
+	var clientErr error
+	waitErr := wait.PollImmediate(providerComponentsIntervalTimeout, providerComponentsRetryTimeout, func() (bool, error) {
+		if clientErr = target.Apply(providerComponents); clientErr != nil {
+			return false, nil
+		}
+		return true, nil
+	})
+	if waitErr != nil {
+		return errors.Wrap(clientErr, "timed out waiting for cluster-api components to be ready")
 	}
 
 	klog.Info("Pivoting Cluster API objects from bootstrap to target cluster.")
