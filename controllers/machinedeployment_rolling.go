@@ -20,7 +20,6 @@ import (
 	"sort"
 
 	"github.com/pkg/errors"
-	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/klog"
 	"k8s.io/utils/integer"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1alpha3"
@@ -28,8 +27,8 @@ import (
 )
 
 // rolloutRolling implements the logic for rolling a new machine set.
-func (r *MachineDeploymentReconciler) rolloutRolling(d *clusterv1.MachineDeployment, msList []*clusterv1.MachineSet, machineMap map[types.UID]*clusterv1.MachineList) error {
-	newMS, oldMSs, err := r.getAllMachineSetsAndSyncRevision(d, msList, machineMap, true)
+func (r *MachineDeploymentReconciler) rolloutRolling(d *clusterv1.MachineDeployment, msList []*clusterv1.MachineSet) error {
+	newMS, oldMSs, err := r.getAllMachineSetsAndSyncRevision(d, msList, true)
 	if err != nil {
 		return err
 	}
@@ -166,7 +165,8 @@ func (r *MachineDeploymentReconciler) reconcileOldMachineSets(allMSs []*clusterv
 	klog.V(4).Infof("Cleaned up unhealthy replicas from old MachineSets by %d", cleanupCount)
 
 	// Scale down old machine sets, need check maxUnavailable to ensure we can scale down
-	allMSs = append(oldMSs, newMS)
+	allMSs = oldMSs
+	allMSs = append(allMSs, newMS)
 	scaledDownCount, err := r.scaleDownOldMachineSetsForRollingUpdate(allMSs, oldMSs, deployment)
 	if err != nil {
 		return err

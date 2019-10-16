@@ -656,7 +656,7 @@ func TestReconcileInfrastructure(t *testing.T) {
 			}
 
 			err := r.reconcileInfrastructure(context.Background(), tc.machine)
-			r.reconcilePhase(context.Background(), tc.machine)
+			r.reconcilePhase(tc.machine)
 			if tc.expectError {
 				g.Expect(err).ToNot(gomega.BeNil())
 			} else {

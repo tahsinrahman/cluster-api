@@ -107,7 +107,7 @@ func (r *ClusterReconciler) Reconcile(req ctrl.Request) (_ ctrl.Result, reterr e
 
 	defer func() {
 		// Always reconcile the Status.Phase field.
-		r.reconcilePhase(ctx, cluster)
+		r.reconcilePhase(cluster)
 
 		// Always attempt to Patch the Cluster object and status after each reconciliation.
 		if err := patchHelper.Patch(ctx, cluster); err != nil {
@@ -130,7 +130,7 @@ func (r *ClusterReconciler) Reconcile(req ctrl.Request) (_ ctrl.Result, reterr e
 func (r *ClusterReconciler) reconcile(ctx context.Context, cluster *clusterv1.Cluster) (ctrl.Result, error) {
 	// If object doesn't have a finalizer, add one.
 	if !util.Contains(cluster.Finalizers, clusterv1.ClusterFinalizer) {
-		cluster.Finalizers = append(cluster.ObjectMeta.Finalizers, clusterv1.ClusterFinalizer)
+		cluster.Finalizers = append(cluster.Finalizers, clusterv1.ClusterFinalizer)
 	}
 
 	// Call the inner reconciliation methods.
