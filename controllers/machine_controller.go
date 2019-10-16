@@ -105,7 +105,7 @@ func (r *MachineReconciler) Reconcile(req ctrl.Request) (_ ctrl.Result, reterr e
 
 	defer func() {
 		// Always reconcile the Status.Phase field.
-		r.reconcilePhase(ctx, m)
+		r.reconcilePhase(m)
 
 		// Always attempt to Patch the Machine object and status after each reconciliation.
 		if err := patchHelper.Patch(ctx, m); err != nil {
@@ -148,14 +148,14 @@ func (r *MachineReconciler) reconcile(ctx context.Context, cluster *clusterv1.Cl
 
 	// If the Machine doesn't have a finalizer, add one.
 	if !util.Contains(m.Finalizers, clusterv1.MachineFinalizer) {
-		m.Finalizers = append(m.ObjectMeta.Finalizers, clusterv1.MachineFinalizer)
+		m.Finalizers = append(m.Finalizers, clusterv1.MachineFinalizer)
 	}
 
 	// Call the inner reconciliation methods.
 	reconciliationErrors := []error{
 		r.reconcileBootstrap(ctx, m),
 		r.reconcileInfrastructure(ctx, m),
-		r.reconcileNodeRef(ctx, cluster, m),
+		r.reconcileNodeRef(cluster, m),
 	}
 
 	// Parse the errors, making sure we record if there is a RequeueAfterError.
@@ -192,7 +192,7 @@ func (r *MachineReconciler) reconcileDelete(ctx context.Context, cluster *cluste
 		// Drain node before deletion
 		if _, exists := m.ObjectMeta.Annotations[clusterv1.ExcludeNodeDrainingAnnotation]; !exists {
 			klog.Infof("Draining node %q for machine %q", m.Status.NodeRef.Name, m.Name)
-			if err := r.drainNode(ctx, cluster, m.Status.NodeRef.Name, m.Name); err != nil {
+			if err := r.drainNode(cluster, m.Status.NodeRef.Name, m.Name); err != nil {
 				r.recorder.Eventf(m, corev1.EventTypeWarning, "FailedDrainNode", "error draining Machine's node %q: %v", m.Status.NodeRef.Name, err)
 				return ctrl.Result{}, err
 			}
@@ -256,7 +256,7 @@ func (r *MachineReconciler) isDeleteNodeAllowed(ctx context.Context, machine *cl
 	}
 }
 
-func (r *MachineReconciler) drainNode(ctx context.Context, cluster *clusterv1.Cluster, nodeName string, machineName string) error {
+func (r *MachineReconciler) drainNode(cluster *clusterv1.Cluster, nodeName string, machineName string) error {
 	var kubeClient kubernetes.Interface
 	if cluster == nil {
 		var err error

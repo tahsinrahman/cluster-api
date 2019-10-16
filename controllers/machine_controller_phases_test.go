@@ -360,13 +360,15 @@ func TestReconcilePhase(t *testing.T) {
 			}
 
 			res, err := r.reconcile(context.Background(), nil, tc.machine)
-			r.reconcilePhase(context.Background(), tc.machine)
-			if tc.expectError {
+			r.reconcilePhase(tc.machine)
+
+			switch {
+			case tc.expectError:
 				g.Expect(err).ToNot(gomega.BeNil())
-			} else if tc.expectRequeueAfter {
+			case tc.expectRequeueAfter:
 				g.Expect(res.Requeue).To(gomega.BeTrue())
 				g.Expect(res.RequeueAfter.Seconds() > 0).To(gomega.BeTrue())
-			} else if !tc.expectError {
+			case !tc.expectError:
 				g.Expect(err).To(gomega.BeNil())
 			}
 
@@ -753,7 +755,7 @@ func TestReconcileInfrastructure(t *testing.T) {
 			}
 
 			err := r.reconcileInfrastructure(context.Background(), tc.machine)
-			r.reconcilePhase(context.Background(), tc.machine)
+			r.reconcilePhase(tc.machine)
 			if tc.expectError {
 				g.Expect(err).ToNot(gomega.BeNil())
 			} else {
