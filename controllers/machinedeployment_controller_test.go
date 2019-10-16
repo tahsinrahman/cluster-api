@@ -396,7 +396,8 @@ func TestMachineSetToDeployments(t *testing.T) {
 		},
 	}
 
-	clusterv1.AddToScheme(scheme.Scheme)
+	err := clusterv1.AddToScheme(scheme.Scheme)
+	Expect(err).NotTo(HaveOccurred())
 	r := &MachineDeploymentReconciler{
 		Client:   fake.NewFakeClient(machineDeplopymentList),
 		Log:      log.Log,

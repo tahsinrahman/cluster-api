@@ -17,6 +17,9 @@ limitations under the License.
 package main
 
 import (
+	"fmt"
+	"os"
+
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/klog/klogr"
 	clusterv1 "sigs.k8s.io/cluster-api/api/v1alpha3"
@@ -26,6 +29,9 @@ import (
 
 func main() {
 	log.SetLogger(klogr.New())
-	clusterv1.AddToScheme(scheme.Scheme)
+	if err := clusterv1.AddToScheme(scheme.Scheme); err != nil {
+		_, _ = fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
 	cmd.Execute()
 }
