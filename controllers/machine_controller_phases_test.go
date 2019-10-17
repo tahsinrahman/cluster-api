@@ -118,7 +118,7 @@ var _ = Describe("Reconcile Machine Phases", func() {
 		Expect(err).NotTo(HaveOccurred())
 		Expect(res.Requeue).To(BeTrue())
 
-		r.reconcilePhase(context.Background(), machine)
+		r.reconcilePhase(machine)
 		Expect(machine.Status.GetTypedPhase()).To(Equal(clusterv1.MachinePhasePending))
 	})
 
@@ -140,7 +140,7 @@ var _ = Describe("Reconcile Machine Phases", func() {
 		Expect(err).NotTo(HaveOccurred())
 		Expect(res.Requeue).To(BeTrue())
 
-		r.reconcilePhase(context.Background(), machine)
+		r.reconcilePhase(machine)
 		Expect(machine.Status.GetTypedPhase()).To(Equal(clusterv1.MachinePhaseProvisioning))
 	})
 
@@ -177,7 +177,7 @@ var _ = Describe("Reconcile Machine Phases", func() {
 		Expect(res.Requeue).To(BeTrue())
 		Expect(machine.Status.Addresses).To(HaveLen(2))
 
-		r.reconcilePhase(context.Background(), machine)
+		r.reconcilePhase(machine)
 		Expect(machine.Status.GetTypedPhase()).To(Equal(clusterv1.MachinePhaseProvisioned))
 	})
 
@@ -204,7 +204,7 @@ var _ = Describe("Reconcile Machine Phases", func() {
 		Expect(res.Requeue).To(BeTrue())
 		Expect(machine.Status.Addresses).To(HaveLen(0))
 
-		r.reconcilePhase(context.Background(), machine)
+		r.reconcilePhase(machine)
 		Expect(machine.Status.GetTypedPhase()).To(Equal(clusterv1.MachinePhaseProvisioned))
 	})
 
@@ -243,7 +243,7 @@ var _ = Describe("Reconcile Machine Phases", func() {
 		Expect(err).NotTo(HaveOccurred())
 		Expect(res.Requeue).To(BeFalse())
 
-		r.reconcilePhase(context.Background(), machine)
+		r.reconcilePhase(machine)
 		Expect(machine.Status.GetTypedPhase()).To(Equal(clusterv1.MachinePhaseRunning))
 	})
 
@@ -285,7 +285,7 @@ var _ = Describe("Reconcile Machine Phases", func() {
 		Expect(err).NotTo(HaveOccurred())
 		Expect(res.Requeue).To(BeFalse())
 
-		r.reconcilePhase(context.Background(), machine)
+		r.reconcilePhase(machine)
 		Expect(machine.Status.GetTypedPhase()).To(Equal(clusterv1.MachinePhaseDeleting))
 	})
 })
