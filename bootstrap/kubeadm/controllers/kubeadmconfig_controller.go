@@ -61,7 +61,7 @@ type SecretsClientFactory interface {
 
 // KubeadmConfigReconciler reconciles a KubeadmConfig object
 type KubeadmConfigReconciler struct {
-	client.Client
+	Client               client.Client
 	SecretsClientFactory SecretsClientFactory
 	KubeadmInitLock      InitLocker
 	Log                  logr.Logger
@@ -100,7 +100,7 @@ func (r *KubeadmConfigReconciler) Reconcile(req ctrl.Request) (_ ctrl.Result, re
 
 	// Lookup the kubeadm config
 	config := &bootstrapv1.KubeadmConfig{}
-	if err := r.Get(ctx, req.NamespacedName, config); err != nil {
+	if err := r.Client.Get(ctx, req.NamespacedName, config); err != nil {
 		if apierrors.IsNotFound(err) {
 			return ctrl.Result{}, nil
 		}
@@ -149,7 +149,7 @@ func (r *KubeadmConfigReconciler) Reconcile(req ctrl.Request) (_ ctrl.Result, re
 	case machine.Spec.Bootstrap.Data != nil && !config.Status.Ready:
 		config.Status.Ready = true
 		// Initialize the patch helper
-		patchHelper, err := patch.NewHelper(config, r)
+		patchHelper, err := patch.NewHelper(config, r.Client)
 		if err != nil {
 			return ctrl.Result{}, err
 		}
@@ -178,7 +178,7 @@ func (r *KubeadmConfigReconciler) Reconcile(req ctrl.Request) (_ ctrl.Result, re
 	}
 
 	// Initialize the patch helper
-	patchHelper, err := patch.NewHelper(config, r)
+	patchHelper, err := patch.NewHelper(config, r.Client)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
@@ -421,7 +421,7 @@ func (r *KubeadmConfigReconciler) ClusterToKubeadmConfigs(o handler.MapObject) [
 	}
 
 	machineList := &clusterv1.MachineList{}
-	if err := r.List(context.Background(), machineList, selectors...); err != nil {
+	if err := r.Client.List(context.Background(), machineList, selectors...); err != nil {
 		r.Log.Error(err, "failed to list Machines", "Cluster", c.Name, "Namespace", c.Namespace)
 		return nil
 	}
